@@ -1,7 +1,6 @@
 const util = require('util');
 
 class StateManager {
-    
     constructor(
         initialState = {}, 
         rootReducer = (action, state) => { return state },
@@ -62,22 +61,6 @@ class StateManager {
         }
     }
 }
-
-const rootReducer = (action, state) => {
-    switch(action.type) {
-        case 'INCREMENT':
-            return Object.assign(state, { counter: state.counter + 1 })
-        default:
-            return state;
-    }
-}
-
-const loggerMiddleware = state => {
-    console.log(
-        `Current state is ${state}`
-    )
-}
-
 
 if(typeof module === 'object') {
     module.exports = StateManager;
