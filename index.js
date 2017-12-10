@@ -1,14 +1,33 @@
+const util = require('util');
+
 class StateManager {
-    constructor(initialState = {}, rootReducer = (action, state) => { return state }) {
+    
+    constructor(
+        initialState = {}, 
+        rootReducer = (action, state) => { return state },
+        middlewares = [],
+    ) {
         this.state = initialState;
         this.rootReducer = rootReducer;
         this.subscription = {
             active: false,
             fn: null 
-        }
+        },
+        this.middlewares = middlewares;
+        this.history = [];
     }
-    dispatch(action) {
-        if(!action.type || typeof action !== 'object') throw Error('Action must be an object with a type property');
+    applyMiddleware(...fns) {
+      this.middlewares = this.middlewares.concat(fns);
+    }
+    dispatch(action, middlewares) {
+        if(!action.type || !util.isObject(action)) throw Error('Action must be an object with a type property');
+        if(this.middlewares.length > 0) {
+            this.middlewares.forEach(middleware => {
+                util.isFunction(middleware) ? middleware(this.state) : null 
+            })
+        }
+        console.log(this.state)
+        console.log(this.history)
         this.state  = this.rootReducer(action, this.state);
         this.getStateIfSubscribed();
     }
@@ -28,6 +47,22 @@ class StateManager {
     getState() {
         return this.state;
     }
+    getVisualization() {
+        if(this.history.length > 0) {
+            this.history.forEach(slice => {
+                console.log(slice.timeStamp, slice.currentState)
+            })
+        }
+    }
+    replaceReducer(nextRootReducer) {
+        if(util.isFunction(nextRootReducer)) {
+            this.rootReducer = nextRootReducer;
+        }
+        else {
+            throw TypeError(`Expected new reducer to be of type function but instead
+            received ${nextRootReducer}`)
+        }
+    }
 }
 
 const rootReducer = (action, state) => {
@@ -38,6 +73,13 @@ const rootReducer = (action, state) => {
             return state;
     }
 }
+
+const loggerMiddleware = state => {
+    console.log(
+        `Current state is ${state}`
+    )
+}
+
 const sm = new StateManager({ counter: 0 }, rootReducer);
 const subscription = sm.subscribe((newState) => {
     console.log('New state is ');
@@ -47,5 +89,10 @@ sm.dispatch({ type: 'INCREMENT' });
 sm.dispatch({ type: 'INCREMENT' });
 sm.dispatch({ type: 'INCREMENT' });
 sm.dispatch({ type: 'INCREMENTS' });
+sm.applyMiddleware(loggerMiddleware);
+sm.getVisualization();
 
-module.exports = StateManager;
+
+if(typeof module === 'object') {
+    module.exports = StateManager;
+}
