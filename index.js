@@ -26,8 +26,6 @@ class StateManager {
                 util.isFunction(middleware) ? middleware(this.state) : null 
             })
         }
-        console.log(this.state)
-        console.log(this.history)
         this.state  = this.rootReducer(action, this.state);
         this.getStateIfSubscribed();
     }
@@ -79,18 +77,6 @@ const loggerMiddleware = state => {
         `Current state is ${state}`
     )
 }
-
-const sm = new StateManager({ counter: 0 }, rootReducer);
-const subscription = sm.subscribe((newState) => {
-    console.log('New state is ');
-    console.log(newState);
-});
-sm.dispatch({ type: 'INCREMENT' });
-sm.dispatch({ type: 'INCREMENT' });
-sm.dispatch({ type: 'INCREMENT' });
-sm.dispatch({ type: 'INCREMENTS' });
-sm.applyMiddleware(loggerMiddleware);
-sm.getVisualization();
 
 
 if(typeof module === 'object') {
